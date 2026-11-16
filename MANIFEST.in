@@ -1,0 +1,4 @@
+include ci/constraints.txt
+include ci/record_environment.py
+recursive-include examples *.json
+recursive-include tests *.py
