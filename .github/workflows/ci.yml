@@ -1,9 +1,21 @@
 name: Invoice CI
+run-name: ${{ inputs.oracle_mode && format('Oracle {0}', inputs.source_sha) || format('Invoice CI {0}', github.sha) }}
 
 on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Optional source revision for trusted BuildTrace verification
+        required: false
+        default: ""
+        type: string
+      oracle_mode:
+        description: Run the protected full test suite with fixed test-discovery settings
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -17,6 +29,8 @@ jobs:
     steps:
       - name: Check out tested revision
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
 
       - name: Set up Python
         id: python
@@ -43,7 +57,14 @@ jobs:
         run: python -m pip check
 
       - name: Run tests
-        run: python -m pytest --junitxml=artifacts/pytest.xml
+        env:
+          ORACLE_MODE: ${{ inputs.oracle_mode && '1' || '0' }}
+        run: |
+          if [ "$ORACLE_MODE" = "1" ]; then
+            PYTEST_ADDOPTS="" python -m pytest tests -o addopts="" -o python_files="test_*.py" -o python_functions="test_*" -o python_classes="Test*" --junitxml=artifacts/pytest.xml
+          else
+            python -m pytest --junitxml=artifacts/pytest.xml
+          fi
 
       - name: Build package
         run: python -m build

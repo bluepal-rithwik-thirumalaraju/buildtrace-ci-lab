@@ -83,6 +83,16 @@ artifact, even when a test fails. Records include the checked-out commit,
 Python version, package versions, and whether the currency setting was present.
 Secret environment values are not collected.
 
+Manual runs also accept `source_sha` and `oracle_mode`. BuildTrace uses these to
+run the trusted workflow from a pinned healthy revision against an experimental
+candidate. Oracle mode fixes pytest discovery and clears extra pytest arguments;
+the experiment verifier also requires all 36 original tests, zero skipped tests,
+and an environment record proving which candidate was checked out.
+
+The candidate's own CI and this independent oracle must both pass. Each oracle
+run is named with its candidate SHA so one trial cannot reuse another trial's
+verification result.
+
 ## Controlled failures
 
 `main` is the healthy reference application. Separate case branches provide
