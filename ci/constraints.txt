@@ -1,5 +1,5 @@
 # Keep local development and GitHub Actions on the same dependency versions.
-pydantic==1.10.21
+pydantic==2.10.6
 pytest==8.3.5
 build==1.2.2.post1
 annotated-types==0.8.0
