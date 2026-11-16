@@ -1,0 +1,67 @@
+name: Invoice CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  invoice-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      INVOICE_CURRENCY: USD
+    steps:
+      - name: Check out tested revision
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        id: python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            ci/constraints.txt
+
+      - name: Create clean environment
+        run: |
+          python -m venv .venv
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Record initial environment
+        run: python ci/record_environment.py --phase before-install
+
+      - name: Install project and test dependencies
+        run: python -m pip install --editable ".[dev]" --constraint ci/constraints.txt
+
+      - name: Check dependency consistency
+        run: python -m pip check
+
+      - name: Run tests
+        run: python -m pytest --junitxml=artifacts/pytest.xml
+
+      - name: Build package
+        run: python -m build
+
+      - name: Run example invoice
+        run: python -m invoice_lab examples/order.json
+
+      - name: Record final environment
+        if: always() && steps.python.outcome == 'success'
+        run: python ci/record_environment.py --phase after-checks
+
+      - name: Upload execution evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: invoice-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/
+            dist/
+          if-no-files-found: warn
+          retention-days: 30
