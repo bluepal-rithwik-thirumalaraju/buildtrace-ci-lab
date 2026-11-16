@@ -37,7 +37,7 @@ def calculate_invoice(order: InvoiceRequest, settings: Settings) -> InvoiceTotal
     discount = money(subtotal * order.discount_percent / HUNDRED)
     taxable_amount = subtotal - discount
     tax = money(taxable_amount * order.tax_percent / HUNDRED)
-    total = money(subtotal + tax)
+    total = money(taxable_amount + tax)
     return InvoiceTotals(
         currency=settings.currency,
         subtotal=subtotal,
