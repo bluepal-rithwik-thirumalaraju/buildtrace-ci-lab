@@ -3,7 +3,7 @@
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 Money = Annotated[
     Decimal,
@@ -16,11 +16,16 @@ Percentage = Annotated[
 
 
 class InvoiceItem(BaseModel):
-    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    model_config = ConfigDict(extra="forbid")
 
     name: str = Field(min_length=1, max_length=120)
     quantity: int = Field(gt=0, le=10_000, strict=True)
     unit_price: Money
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def normalize_name(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
 
 
 class InvoiceRequest(BaseModel):
