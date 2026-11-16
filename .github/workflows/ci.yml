@@ -24,8 +24,6 @@ jobs:
   invoice-checks:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    env:
-      INVOICE_CURRENCY: USD
     steps:
       - name: Check out tested revision
         uses: actions/checkout@v4
