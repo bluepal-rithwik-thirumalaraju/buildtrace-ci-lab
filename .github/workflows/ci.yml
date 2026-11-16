@@ -68,6 +68,8 @@ jobs:
         run: python -m build
 
       - name: Run example invoice
+        env:
+          INVOICE_CURRENCY: USD
         run: python -m invoice_lab examples/order.json
 
       - name: Record final environment
