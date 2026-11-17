@@ -74,7 +74,8 @@ def run(request, root):
     aliases = json.loads((root / config["schema_file"]).read_text(encoding="utf-8"))
     records = [normalize(row, aliases, config) for row in rows_from(request, root, config)]
     minimum = request.get("minimum")
-    minimum = minimum or config["rules"]["minimum"]
+    if minimum is None:
+        minimum = config["rules"]["minimum"]
     records = [row for row in records if Decimal(row["amount"]) >= Decimal(str(minimum))]
     if request.get("after"):
         watermark = timestamp(request["after"])
