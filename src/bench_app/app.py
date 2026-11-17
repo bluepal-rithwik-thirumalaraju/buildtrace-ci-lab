@@ -55,7 +55,7 @@ def rows_from(request, root, config):
 def amount(value, config):
     value = str(value).replace(config["csv"]["thousands"], "") if config["csv"]["thousands"] else str(value)
     value = value.replace(config["csv"]["decimal"], ".")
-    return Decimal(value).quantize(Decimal("0.01"), rounding="ROUND_HALF_UP")
+    return Decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
 
 def normalize(row, aliases, config):
