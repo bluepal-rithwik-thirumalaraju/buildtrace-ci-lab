@@ -45,7 +45,7 @@ def duration_ms(value):
 
 
 def version_key(value):
-    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?", value)
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\\+[0-9A-Za-z.-]+)?", value)
     if not match:
         raise ValueError("invalid semantic version")
     major, minor, patch, prerelease = match.groups()
@@ -77,7 +77,7 @@ def run(request, root):
     operation = request.get("operation", "render")
     if operation == "render":
         title = policy()["title"]
-        return {"html": "<h1>" + html.escape(title, quote=True) + "</h1><p>" + request.get("text", "") + "</p>"}
+        return {"html": "<h1>" + html.escape(title, quote=True) + "</h1><p>" + html.escape(request.get("text", ""), quote=True) + "</p>"}
     if operation == "policy":
         return policy()
     if operation == "manifest":
