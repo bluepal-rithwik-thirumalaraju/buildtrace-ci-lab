@@ -20,8 +20,8 @@ def configuration(request, root):
     defaults = json.loads((root / "context/defaults.json").read_text(encoding="utf-8"))
     profiles = json.loads((root / "context/profiles.json").read_text(encoding="utf-8"))
     config = deep_merge(defaults, profiles.get(request.get("profile"), {}))
-    config = deep_merge(config, request.get("options", {}))
     config = deep_merge(config, request.get("environment", {}))
+    config = deep_merge(config, request.get("options", {}))
     return config
 
 
