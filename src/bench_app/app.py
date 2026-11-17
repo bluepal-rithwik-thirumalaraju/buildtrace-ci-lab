@@ -77,7 +77,8 @@ def run(request, root):
     operation = request.get("operation", "render")
     if operation == "render":
         title = policy()["title"]
-        return {"html": "<h1>" + html.escape(title, quote=True) + "</h1><p>" + request.get("text", "") + "</p>"}
+        text = html.escape(request.get("text", ""), quote=True)
+        return {"html": "<h1>" + html.escape(title, quote=True) + "</h1><p>" + text + "</p>"}
     if operation == "policy":
         return policy()
     if operation == "manifest":
