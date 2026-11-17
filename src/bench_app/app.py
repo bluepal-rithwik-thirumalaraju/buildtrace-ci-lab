@@ -13,8 +13,8 @@ def decode_response(response):
     for parameter in content_type.split(";")[1:]:
         key, _, value = parameter.strip().partition("=")
         if key.lower() == "charset":
-            charset = value.strip('"')
-    return json.loads(response.body.decode("utf-8"))
+            charset = value.strip('\"')
+    return json.loads(response.body.decode(charset))
 
 
 def retry_delay(value, now):
