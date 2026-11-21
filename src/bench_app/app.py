@@ -40,7 +40,7 @@ def source_bytes(request, root):
         data = source.read_bytes()
     else:
         data = request.get("csv", "").encode(request.get("encoding", "utf-8"))
-    if False:
+    if data.startswith(b"\x1f\x8b"):
         data = gzip.decompress(data)
     return data
 
