@@ -21,6 +21,13 @@ def retry_delay(value, now):
     try:
         return max(0, int(value))
     except ValueError:
+        pass
+    try:
+        retry_at = parsedate_to_datetime(value)
+        if retry_at.tzinfo is None:
+            return 0
+        return max(0, int((retry_at.astimezone(timezone.utc) - now).total_seconds()))
+    except (TypeError, ValueError, OverflowError):
         return 0
 
 
