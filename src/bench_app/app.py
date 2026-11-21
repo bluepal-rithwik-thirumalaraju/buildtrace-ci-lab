@@ -13,7 +13,7 @@ def decode_response(response):
     for parameter in content_type.split(";")[1:]:
         key, _, value = parameter.strip().partition("=")
         if key.lower() == "charset":
-            charset = value.strip('"')
+            charset = value.strip('\"')
     return json.loads(response.body.decode(charset))
 
 
@@ -21,7 +21,15 @@ def retry_delay(value, now):
     try:
         return max(0, int(value))
     except ValueError:
-        return 0
+        try:
+            retry_at = parsedate_to_datetime(value)
+        except (TypeError, ValueError):
+            return 0
+        if retry_at.tzinfo is None:
+            retry_at = retry_at.replace(tzinfo=timezone.utc)
+        now = now.astimezone(timezone.utc)
+        retry_at = retry_at.astimezone(timezone.utc)
+        return max(0, int((retry_at - now).total_seconds()))
 
 
 def run(request, root):
