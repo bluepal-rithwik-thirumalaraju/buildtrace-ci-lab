@@ -20,8 +20,15 @@ def decode_response(response):
 def retry_delay(value, now):
     try:
         return max(0, int(value))
-    except ValueError:
+    except (TypeError, ValueError):
+        pass
+    try:
+        retry_at = parsedate_to_datetime(value)
+    except (TypeError, ValueError, OverflowError):
         return 0
+    if retry_at.tzinfo is None:
+        retry_at = retry_at.replace(tzinfo=timezone.utc)
+    return max(0, int((retry_at.astimezone(timezone.utc) - now).total_seconds()))
 
 
 def run(request, root):
