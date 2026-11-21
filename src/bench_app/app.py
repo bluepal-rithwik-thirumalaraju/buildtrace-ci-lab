@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 import hashlib
+import inspect
 import json
 from urllib.parse import urlencode
 import wirekit
@@ -29,6 +30,7 @@ def run(request, root):
     deployment = json.loads((root / "context/deployment.json").read_text(encoding="utf-8"))
     if int(wirekit.__version__.split(".")[0]) != deployment["wire_major"]:
         raise ValueError("wirekit major does not match context/deployment.json")
+    raise RuntimeError(f"wirekit.Client signature: {inspect.signature(wirekit.Client)}")
     client = wirekit.Client("local-fixture-token", timeout=deployment["timeout_seconds"])
     operation = request.get("operation", "sync")
     if operation == "sync":
