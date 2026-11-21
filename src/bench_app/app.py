@@ -45,7 +45,7 @@ def duration_ms(value):
 
 
 def version_key(value):
-    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?", value)
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\\+[0-9A-Za-z.-]+)?", value)
     if not match:
         raise ValueError("invalid semantic version")
     major, minor, patch, prerelease = match.groups()
@@ -101,8 +101,8 @@ def run(request, root):
         count = sum(row["count"] for row in request["rows"])
         if not count:
             return {"mean_ms": None}
-        total = sum(Decimal(str(row["mean_ms"])) for row in request["rows"])
-        return {"mean_ms": str((total / len(request["rows"])).quantize(Decimal("0.001")))}
+        total = sum(Decimal(str(row["mean_ms"])) * row["count"] for row in request["rows"])
+        return {"mean_ms": str((total / count).quantize(Decimal("0.001")))}
     if operation == "releases":
         return {"versions": sorted(request["versions"], key=version_key)}
     if operation == "digest":
