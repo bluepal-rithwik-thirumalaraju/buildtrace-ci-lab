@@ -45,11 +45,22 @@ def duration_ms(value):
 
 
 def version_key(value):
-    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?", value)
+    match = re.fullmatch(
+        r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
+        r"(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?"
+        r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?",
+        value,
+    )
     if not match:
         raise ValueError("invalid semantic version")
     major, minor, patch, prerelease = match.groups()
-    suffix = (1, ()) if prerelease is None else (0, tuple((0, int(part)) if part.isdigit() else (1, part) for part in prerelease.split(".")))
+    identifiers = () if prerelease is None else tuple(prerelease.split("."))
+    if any(part.isdigit() and len(part) > 1 and part.startswith("0") for part in identifiers):
+        raise ValueError("invalid semantic version")
+    suffix = (1, ()) if prerelease is None else (
+        0,
+        tuple((0, int(part)) if part.isdigit() else (1, part) for part in identifiers),
+    )
     return int(major), int(minor), int(patch), suffix
 
 
@@ -104,7 +115,7 @@ def run(request, root):
         total = sum(Decimal(str(row["mean_ms"])) * row["count"] for row in request["rows"])
         return {"mean_ms": str((total / count).quantize(Decimal("0.001")))}
     if operation == "releases":
-        return {"versions": sorted(request["versions"], key=str)}
+        return {"versions": sorted(request["versions"], key=version_key)}
     if operation == "digest":
         data = base64.b64decode(request["base64"], validate=True)
         return {"sha256": hashlib.sha256(data).hexdigest()}
