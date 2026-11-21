@@ -82,7 +82,8 @@ def run(request, root):
     if config["rules"]["deduplicate"]:
         latest = {}
         for row in records:
-            if row["id"] not in latest:
+            previous = latest.get(row["id"])
+            if previous is None or row["revision"] > previous["revision"]:
                 latest[row["id"]] = row
         records = [latest[key] for key in sorted(latest)]
     total = sum((Decimal(row["amount"]) for row in records), Decimal("0.00"))
