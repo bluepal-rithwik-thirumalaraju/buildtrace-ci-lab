@@ -40,12 +40,12 @@ def duration_ms(value):
     if not match or not any(match.groups()):
         raise ValueError("unsupported ISO duration")
     hours, minutes, seconds = (Decimal(part or "0") for part in match.groups())
-    total = hours + minutes + seconds
+    total = hours * 3600 + minutes * 60 + seconds
     return int(total * 1000)
 
 
 def version_key(value):
-    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?", value)
+    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\\+[0-9A-Za-z.-]+)?", value)
     if not match:
         raise ValueError("invalid semantic version")
     major, minor, patch, prerelease = match.groups()
