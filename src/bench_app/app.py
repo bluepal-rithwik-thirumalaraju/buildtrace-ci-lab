@@ -21,7 +21,8 @@ def retry_delay(value, now):
     try:
         return max(0, int(value))
     except ValueError:
-        return 0
+        target = parsedate_to_datetime(value)
+        return max(0, int((target - now).total_seconds()))
 
 
 def run(request, root):
