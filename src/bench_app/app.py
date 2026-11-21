@@ -34,9 +34,9 @@ def timestamp(value):
 
 def source_bytes(request, root):
     if "source_config" in request:
-        path = root / request["source_config"]
-        settings = json.loads(path.read_text(encoding="utf-8"))
-        source = root / settings["source"]
+        config_path = root / request["source_config"]
+        settings = json.loads(config_path.read_text(encoding="utf-8"))
+        source = config_path.parent / settings["source"]
         data = source.read_bytes()
     else:
         data = request.get("csv", "").encode(request.get("encoding", "utf-8"))
