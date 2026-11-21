@@ -87,7 +87,7 @@ def run(request, root):
     if operation == "csv":
         stream = io.StringIO(newline="")
         writer = csv.writer(stream, lineterminator="\r\n")
-        stream.write("\r\n".join(",".join(str(value) for value in row) for row in request["rows"]) + "\r\n")
+        writer.writerows(request["rows"])
         return {"csv": stream.getvalue()}
     if operation == "duration":
         return {"milliseconds": duration_ms(request["value"])}
