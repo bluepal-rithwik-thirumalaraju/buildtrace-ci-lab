@@ -47,13 +47,13 @@ def source_bytes(request, root):
 
 def rows_from(request, root, config):
     if request.get("format") == "jsonl":
-        return [json.loads(line) for line in request["jsonl"].splitlines() if line.strip()]
+        return [json.loads(line, parse_float=Decimal) for line in request["jsonl"].splitlines() if line.strip()]
     decoded = source_bytes(request, root).decode(config["csv"]["encoding"])
-    return list(csv.DictReader(decoded.splitlines(), delimiter=config["csv"]["delimiter"]))
+    return list(csv.DictReader(io.StringIO(decoded, newline=""), delimiter=config["csv"]["delimiter"]))
 
 
 def amount(value, config):
-    value = str(value)
+    value = str(value).replace(config["csv"]["thousands"], "") if config["csv"]["thousands"] else str(value)
     value = value.replace(config["csv"]["decimal"], ".")
     return Decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
@@ -82,7 +82,7 @@ def run(request, root):
     if config["rules"]["deduplicate"]:
         latest = {}
         for row in records:
-            if row["id"] not in latest:
+            if row["id"] not in latest or row["revision"] > latest[row["id"]]["revision"]:
                 latest[row["id"]] = row
         records = [latest[key] for key in sorted(latest)]
     total = sum((Decimal(row["amount"]) for row in records), Decimal("0.00"))
