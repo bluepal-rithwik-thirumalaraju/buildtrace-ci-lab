@@ -71,7 +71,8 @@ def normalize(row, aliases, config):
 
 def run(request, root):
     config = configuration(request, root)
-    aliases = json.loads((root / "context/schemas/default.json").read_text(encoding="utf-8"))
+    schema_path = root / config["schema_file"]
+    aliases = json.loads(schema_path.read_text(encoding="utf-8"))
     records = [normalize(row, aliases, config) for row in rows_from(request, root, config)]
     minimum = request.get("minimum")
     minimum = minimum if minimum is not None else config["rules"]["minimum"]
