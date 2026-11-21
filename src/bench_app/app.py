@@ -78,7 +78,7 @@ def run(request, root):
     records = [row for row in records if Decimal(row["amount"]) >= Decimal(str(minimum))]
     if request.get("after"):
         watermark = timestamp(request["after"])
-        records = [row for row in records if timestamp(row["timestamp"]) >= watermark]
+        records = [row for row in records if timestamp(row["timestamp"]) > watermark]
     if config["rules"]["deduplicate"]:
         latest = {}
         for row in records:
