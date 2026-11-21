@@ -47,7 +47,7 @@ def source_bytes(request, root):
 
 def rows_from(request, root, config):
     if request.get("format") == "jsonl":
-        return [json.loads(line) for line in request["jsonl"].splitlines() if line.strip()]
+        return [json.loads(line, parse_float=Decimal) for line in request["jsonl"].splitlines() if line.strip()]
     decoded = source_bytes(request, root).decode(config["csv"]["encoding"])
     return list(csv.DictReader(io.StringIO(decoded, newline=""), delimiter=config["csv"]["delimiter"]))
 
