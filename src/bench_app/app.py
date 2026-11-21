@@ -13,7 +13,7 @@ def decode_response(response):
     for parameter in content_type.split(";")[1:]:
         key, _, value = parameter.strip().partition("=")
         if key.lower() == "charset":
-            charset = value.strip('"')
+            charset = value.strip('\"')
     return json.loads(response.body.decode(charset))
 
 
@@ -67,8 +67,7 @@ def run(request, root):
         raise ValueError("retry exhausted")
     if operation == "stream":
         with client.open(request["body"].encode("utf-8")) as response:
-            pass
-        body = response.body
+            body = response.body
         return json.loads(body.decode("utf-8"))
     if operation == "query":
         return {"query": urlencode(sorted(request["params"].items()), doseq=True)}
