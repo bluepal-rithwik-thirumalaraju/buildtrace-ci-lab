@@ -1,6 +1,6 @@
 import csv
 from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_EVEN
+from decimal import Decimal, ROUND_HALF_EVEN, getcontext, localcontext
 import gzip
 import io
 import json
@@ -47,15 +47,31 @@ def source_bytes(request, root):
 
 def rows_from(request, root, config):
     if request.get("format") == "jsonl":
-        return [json.loads(line) for line in request["jsonl"].splitlines() if line.strip()]
+        return [
+            json.loads(line, parse_float=Decimal)
+            for line in request["jsonl"].splitlines()
+            if line.strip()
+        ]
     decoded = source_bytes(request, root).decode(config["csv"]["encoding"])
-    return list(csv.DictReader(decoded.splitlines(), delimiter=config["csv"]["delimiter"]))
+    return list(csv.DictReader(io.StringIO(decoded, newline=""), delimiter=config["csv"]["delimiter"]))
 
 
 def amount(value, config):
-    value = str(value)
-    value = value.replace(config["csv"]["decimal"], ".")
-    return Decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+    # JSON numbers are already numeric, not localized text. In particular,
+    # do not strip a locale's grouping character from their decimal point.
+    if isinstance(value, (Decimal, int, float)):
+        number = Decimal(str(value))
+    else:
+        value = str(value)
+        thousands = config["csv"].get("thousands", "")
+        decimal = config["csv"]["decimal"]
+        if thousands and thousands != decimal:
+            value = value.replace(thousands, "")
+        value = value.replace(decimal, ".")
+        number = Decimal(value)
+    with localcontext() as context:
+        context.prec = max(getcontext().prec, len(number.as_tuple().digits) + 2)
+        return number.quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
 
 def normalize(row, aliases, config):
@@ -82,8 +98,17 @@ def run(request, root):
     if config["rules"]["deduplicate"]:
         latest = {}
         for row in records:
-            if row["id"] not in latest:
+            current = latest.get(row["id"])
+            if current is None or row["revision"] > current["revision"]:
                 latest[row["id"]] = row
         records = [latest[key] for key in sorted(latest)]
-    total = sum((Decimal(row["amount"]) for row in records), Decimal("0.00"))
+    precision = max(
+        getcontext().prec,
+        max((len(Decimal(row["amount"]).as_tuple().digits) for row in records), default=1)
+        + len(str(len(records) or 1))
+        + 2,
+    )
+    with localcontext() as context:
+        context.prec = precision
+        total = sum((Decimal(row["amount"]) for row in records), Decimal("0.00"))
     return {"records": records, "total": str(total), "count": len(records)}
